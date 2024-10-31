@@ -39,7 +39,7 @@ async function main() {
   // Step 1: Generate wallet key from mnemonic
   let walletKey;
   try {
-    walletKey = await mnemonicToWalletKey(process.env.DEPLOYER_MNEMONIC.split(" "));
+    walletKey = await mnemonicToWalletKey(deployerMnemonic.split(" "));
     console.log(" - Wallet Key generated successfully");
   } catch (error) {
     console.error("ERROR generating wallet key:", error);
@@ -47,40 +47,20 @@ async function main() {
   }
 
   // Step 2: Define the workchain and create wallet contract
-  // Step 2: Define the workchain and create wallet contract
-let walletContract;
-const workchain = -1; // Set to -1 for mainnet, as specified
+  let walletContract;
+  const workchain = -1; // Set to -1 for mainnet, as specified
 
   try {
-      console.log("Creating wallet contract...");
-      walletContract = WalletContract.create(
-          client,
-          WalletV3R2Source.create({
-              publicKey: walletKey.publicKey,
-              workchain,
-          })
-      );
-    
-      // Check if walletContract and address are initialized
-      if (!walletContract) {
-          throw new Error("WalletContract is undefined after creation");
-      }
-    
-      console.log("walletContract created:", walletContract);
-    
-      if (!walletContract.address) {
-          throw new Error("Wallet contract address is undefined after creation");
-      }
-    
-      console.log(` - Wallet contract created at address: ${wlletContract.address.toFriendly()}`);
-  } catch (error) {
-      console.error("ERROR creating wallet contract:", error);
-      process.exit(1);
-  }
+    console.log("Creating wallet contract...");
+    walletContract = WalletContract.create(
+      client,
+      WalletV3R2Source.create({
+        publicKey: walletKey.publicKey,
+        workchain,
+      })
+    );
 
-
-    // Step 3: Verify walletContract address and log it
-    if (!walletContract?.address) {
+    if (!walletContract.address) {
       throw new Error("Wallet contract address is undefined after creation");
     }
 
@@ -118,13 +98,13 @@ const workchain = -1; // Set to -1 for mainnet, as specified
       console.error(`ERROR: '${rootContract}' does not have 'initData()' function`);
       process.exit(1);
     }
-    const initDataCell = deployInitScript.initData() as Cell;
+    const initDataCell = await deployInitScript.initData();
 
     if (typeof deployInitScript.initMessage !== "function") {
       console.error(`ERROR: '${rootContract}' does not have 'initMessage()' function`);
       process.exit(1);
     }
-    const initMessageCell = deployInitScript.initMessage() as Cell | null;
+    const initMessageCell = await deployInitScript.initMessage();
 
     // Check if compiled code exists
     const hexArtifact = `build/${contractName}.compiled.json`;
@@ -192,6 +172,6 @@ const workchain = -1; // Set to -1 for mainnet, as specified
 
 main();
 
-function sleep(ms: number) {
+function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
